@@ -1,0 +1,1 @@
+& 'C:\Program Files\7-Zip\7z.exe' a -y c:\Temp\$env:COMPUTERNAME-Intune-logs.7z C:\programdata\PatchMyPCIntuneLogs\* C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\* -ssw

@@ -1,0 +1,1 @@
+& C:\Temp\Windows10Upgrade9252.exe /quietinstall /skipeula /auto upgrade

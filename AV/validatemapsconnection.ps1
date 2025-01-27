@@ -1,0 +1,1 @@
+& 'C:\Program Files\Windows Defender\MpCmdRun.exe' -ValidateMapsConnection

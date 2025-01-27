@@ -1,0 +1,1 @@
+Get-Service | where{$_.StartType -eq "Manual"} | Select Name,DisplayName,StartType,Status,DependentServices,ServicesDependedOn | ft -AutoSize

@@ -1,0 +1,1 @@
+reg add 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection' /v ForceDefenderPassiveMode /t REG_DWORD /d 0
