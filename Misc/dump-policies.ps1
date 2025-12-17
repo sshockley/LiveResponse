@@ -1,0 +1,1 @@
+reg export HKLM\SOFTWARE\Policies c:\temp\policies.txt 

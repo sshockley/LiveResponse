@@ -25,96 +25,73 @@ V1.10, 09/22/2016 - Fixed bug with call to sc.exe
 V1.20, 11/13/2017 - Fixed environment variables
 #>
 
+Write-Host "1. Stopping Windows Update Services..." 
+Stop-Service -Name BITS -Force
+Stop-Service -Name wuauserv -Force
+Stop-Service -Name cryptsvc -Force
+ 
+Write-Host "2. Remove QMGR Data file..." 
+Remove-Item -Path "$env:allusersprofile\Application Data\Microsoft\Network\Downloader\qmgr*.dat" -ErrorAction SilentlyContinue 
+ 
+Write-Host "3. Removing the Software Distribution and CatRoot Folder..." 
+Remove-Item -Path "$env:systemroot\SoftwareDistribution" -ErrorAction SilentlyContinue -Recurse
+Remove-Item -Path "$env:systemroot\System32\Catroot2" -ErrorAction SilentlyContinue -Recurse
+ 
+Write-Host "4. Resetting the Windows Update Services to defualt settings..." 
+Start-Process "sc.exe" -ArgumentList "sdset bits D:(A;CI;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)"
+Start-Process "sc.exe" -ArgumentList "sdset wuauserv D:(A;;CCLCSWRPLORC;;;AU)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;SY)"
+ 
+Set-Location $env:systemroot\system32 
+ 
+Write-Host "5. Registering some DLLs..." 
+regsvr32.exe atl.dll /s
+regsvr32.exe urlmon.dll /s
+regsvr32.exe mshtml.dll /s
+regsvr32.exe shdocvw.dll /s
+regsvr32.exe browseui.dll /s
+regsvr32.exe jscript.dll /s
+regsvr32.exe vbscript.dll /s
+regsvr32.exe scrrun.dll /s
+regsvr32.exe msxml.dll /s
+regsvr32.exe msxml3.dll /s
+regsvr32.exe msxml6.dll /s
+regsvr32.exe actxprxy.dll /s
+regsvr32.exe softpub.dll /s
+regsvr32.exe wintrust.dll /s
+regsvr32.exe dssenh.dll /s
+regsvr32.exe rsaenh.dll /s
+regsvr32.exe gpkcsp.dll /s
+regsvr32.exe sccbase.dll /s
+regsvr32.exe slbcsp.dll /s
+regsvr32.exe cryptdlg.dll /s
+regsvr32.exe oleaut32.dll /s
+regsvr32.exe ole32.dll /s
+regsvr32.exe shell32.dll /s
+regsvr32.exe initpki.dll /s
+regsvr32.exe wuapi.dll /s
+regsvr32.exe wuaueng.dll /s
+regsvr32.exe wuaueng1.dll /s
+regsvr32.exe wucltui.dll /s
+regsvr32.exe wups.dll /s
+regsvr32.exe wups2.dll /s
+regsvr32.exe wuweb.dll /s
+regsvr32.exe qmgr.dll /s
+regsvr32.exe qmgrprxy.dll /s
+regsvr32.exe wucltux.dll /s
+regsvr32.exe muweb.dll /s
+regsvr32.exe wuwebv.dll /s
+ 
+Write-Host "6) Resetting the WinSock..." 
+netsh winsock reset 
 
-$arch = Get-WMIObject -Class Win32_Processor -ComputerName LocalHost | Select-Object AddressWidth
-
-Write-Host "1. Stopping Windows Update Services..."
-Stop-Service -Name BITS
-Stop-Service -Name wuauserv
-Stop-Service -Name appidsvc
-Stop-Service -Name cryptsvc
-
-Write-Host "2. Remove QMGR Data file..."
-Remove-Item "$env:allusersprofile\Application Data\Microsoft\Network\Downloader\qmgr*.dat" -ErrorAction SilentlyContinue
-
-Write-Host "3. Renaming the Software Distribution and CatRoot Folder..."
-Rename-Item $env:systemroot\SoftwareDistribution SoftwareDistribution.bak -ErrorAction SilentlyContinue
-Rename-Item $env:systemroot\System32\Catroot2 catroot2.bak -ErrorAction SilentlyContinue
-
-Write-Host "4. Removing old Windows Update log..."
-Remove-Item $env:systemroot\WindowsUpdate.log -ErrorAction SilentlyContinue
-
-Write-Host "5. Resetting the Windows Update Services to defualt settings..."
-"sc.exe sdset bits D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)"
-"sc.exe sdset wuauserv D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)"
-
-Set-Location $env:systemroot\system32
-
-Write-Host "6. Registering some DLLs..."
-regsvr32.exe /s atl.dll
-regsvr32.exe /s urlmon.dll
-regsvr32.exe /s mshtml.dll
-regsvr32.exe /s shdocvw.dll
-regsvr32.exe /s browseui.dll
-regsvr32.exe /s jscript.dll
-regsvr32.exe /s vbscript.dll
-regsvr32.exe /s scrrun.dll
-regsvr32.exe /s msxml.dll
-regsvr32.exe /s msxml3.dll
-regsvr32.exe /s msxml6.dll
-regsvr32.exe /s actxprxy.dll
-regsvr32.exe /s softpub.dll
-regsvr32.exe /s wintrust.dll
-regsvr32.exe /s dssenh.dll
-regsvr32.exe /s rsaenh.dll
-regsvr32.exe /s gpkcsp.dll
-regsvr32.exe /s sccbase.dll
-regsvr32.exe /s slbcsp.dll
-regsvr32.exe /s cryptdlg.dll
-regsvr32.exe /s oleaut32.dll
-regsvr32.exe /s ole32.dll
-regsvr32.exe /s shell32.dll
-regsvr32.exe /s initpki.dll
-regsvr32.exe /s wuapi.dll
-regsvr32.exe /s wuaueng.dll
-regsvr32.exe /s wuaueng1.dll
-regsvr32.exe /s wucltui.dll
-regsvr32.exe /s wups.dll
-regsvr32.exe /s wups2.dll
-regsvr32.exe /s wuweb.dll
-regsvr32.exe /s qmgr.dll
-regsvr32.exe /s qmgrprxy.dll
-regsvr32.exe /s wucltux.dll
-regsvr32.exe /s muweb.dll
-regsvr32.exe /s wuwebv.dll
-
-Write-Host "7) Removing WSUS client settings..."
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v AccountDomainSid /f
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v PingID /f
-REG DELETE "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate" /v SusClientId /f
-
-Write-Host "8) Resetting the WinSock..."
-netsh winsock reset
-netsh winhttp reset proxy
-
-Write-Host "9) Delete all BITS jobs..."
-Get-BitsTransfer | Remove-BitsTransfer
-
-Write-Host "10) Attempting to install the Windows Update Agent..."
-if($arch -eq 64){
-    wusa Windows8-RT-KB2937636-x64 /quiet
-}
-else{
-    wusa Windows8-RT-KB2937636-x86 /quiet
-}
-
-Write-Host "11) Starting Windows Update Services..."
-Start-Service -Name BITS
-Start-Service -Name wuauserv
-Start-Service -Name appidsvc
-Start-Service -Name cryptsvc
-
-Write-Host "12) Forcing discovery..."
-wuauclt /resetauthorization /detectnow
-
-Write-Host "Process complete. Please reboot your computer."
+Write-Host "7) Starting Windows Update Services..." 
+Start-Service -Name BITS 
+Start-Service -Name wuauserv 
+Start-Service -Name cryptsvc 
+ 
+Write-Host "8) Forcing discovery..." 
+#wuauclt /resetauthorization /detectnow 
+USOClient.exe RefreshSettings
+USOClient.exe StartScan
+ 
+Write-Host "Process complete."

@@ -1,0 +1,1 @@
+gpresult /scope:computer /h:c:\temp\gpresult.html /f 

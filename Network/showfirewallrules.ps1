@@ -1,0 +1,1 @@
+get-NetFirewallRule -PolicyStore ActiveStore | export-csv -notypeinformation c:\fw.csv
