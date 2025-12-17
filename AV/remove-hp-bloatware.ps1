@@ -147,26 +147,39 @@ Catch {
 
 # Uninstall HP Wolf Security Application Support for Chrome
 Try {
-	MsiExec /x "{B05FF260-E8D9-437D-9C02-04A23AC5E8F9}" /qn /norestart
 	MsiExec /x "{1CAA9714-DDCF-4D91-B1E6-D7E98628883F}" /qn /norestart
-	MsiExec /x "{AA5BFBE6-BDD8-4383-9C46-0DB84FE59A20}" /qn /norestart
-	MsiExec /x "{567C0987-AC45-4E4C-ADDF-C8A611C15DA1}" /qn /norestart
+	MsiExec /x "{2EDCBE33-9BE1-4B0B-9223-394E68115B1F}" /qn /norestart
+	MsiExec /x "{8A8FEEA3-21F4-417E-AD07-F4F353C846CE}" /qn /norestart
+	MsiExec /x "{8A8FEEA3-21F4-417E-AD07-F4F353C846CE}" /qn /norestart
 	MsiExec /x "{9CE00609-C9E6-4241-B327-52E47302DD23}" /qn /norestart
-    MsiExec /x "{665CC439-C0CF-45ED-97AE-B8D6FA32020E}" /qn /norestart
-	MsiExec /x "{ECE0A1EF-4AF5-469E-9CB8-29FCFAE6BA1D}" /qn /norestart
-	MsiExec /x "{AF1426F4-B847-4EF0-B8E0-B37B49FE93C2}" /qn /norestart
-	MsiExec /x "{ECE0A1EF-4AF5-469E-9CB8-29FCFAE6BA1D}" /qn /norestart
-	MsiExec /x "{8A8FEEA3-21F4-417E-AD07-F4F353C846CE}" /qn /norestart
-	MsiExec /x "{64840480-3A21-11EF-A510-3863BB3CB5A8}" /qn /norestart
-	MsiExec /x "{941D3468-6121-450A-8A44-CAC267B0ED42}" /qn /norestart
-	MsiExec /x "{BD1E4726-7D5C-4E27-B6BF-36B59F0C3708}" /qn /norestart
-	MsiExec /x "{8A8FEEA3-21F4-417E-AD07-F4F353C846CE}" /qn /norestart
-	MsiExec /x "{9425676F-7DBD-40A1-8033-BAC0A9E67101}" /qn /norestart
 	MsiExec /x "{9D695330-183A-11EF-AC7E-3863BB3CB5A8}" /qn /norestart
-	MsiExec /x "{727F12C9-4D97-4F23-8451-927D1DE8E58C}" /qn /norestart
-	MsiExec /x "{A34EDE79-0A76-409F-B258-FF5D1CAE6B8F}" /qn /norestart
 	MsiExec /x "{68E3C76B-6FC8-4993-A424-A92FD5A5F3FB}" /qn /norestart
+	MsiExec /x "{567C0987-AC45-4E4C-ADDF-C8A611C15DA1}" /qn /norestart
+	MsiExec /x "{727F12C9-4D97-4F23-8451-927D1DE8E58C}" /qn /norestart
+	MsiExec /x "{941D3468-6121-450A-8A44-CAC267B0ED42}" /qn /norestart
+	MsiExec /x "{994A4A00-B346-11EF-B93A-3863BB3CB5AC}" /qn /norestart
+	MsiExec /x "{6468C4A5-E47E-405F-B675-A70A70983EA6}" /qn /norestart
 	MsiExec /x "{534705EB-028B-4330-8DE5-1BC7C7A0A7B8}" /qn /norestart
+	MsiExec /x "{9425676F-7DBD-40A1-8033-BAC0A9E67101}" /qn /norestart
+	MsiExec /x "{64840480-3A21-11EF-A510-3863BB3CB5A8}" /qn /norestart
+	MsiExec /x "{A34EDE79-0A76-409F-B258-FF5D1CAE6B8F}" /qn /norestart
+	MsiExec /x "{A99FAB39-0857-49B4-B51E-44049CF3C5AD}" /qn /norestart
+	MsiExec /x "{AA5BFBE6-BDD8-4383-9C46-0DB84FE59A20}" /qn /norestart
+	MsiExec /x "{AF1426F4-B847-4EF0-B8E0-B37B49FE93C2}" /qn /norestart
+	MsiExec /x "{B0B8DA83-A602-413B-A311-D408875F245C}" /qn /norestart
+	MsiExec /x "{B05FF260-E8D9-437D-9C02-04A23AC5E8F9}" /qn /norestart
+	MsiExec /x "{B54A572C-3F00-4301-96AA-3264685320F7}" /qn /norestart
+	MsiExec /x "{BD1E4726-7D5C-4E27-B6BF-36B59F0C3708}" /qn /norestart
+	MsiExec /x "{D25C8C5F-5534-41C3-843D-CF847C50FE0C}" /qn /norestart
+	MsiExec /x "{ECE0A1EF-4AF5-469E-9CB8-29FCFAE6BA1D}" /qn /norestart
+	MsiExec /x "{ECE0A1EF-4AF5-469E-9CB8-29FCFAE6BA1D}" /qn /norestart
+	MsiExec /x "{F87EA799-5BD1-4512-9F5C-2069B19825B3}" /qn /norestart
+    MsiExec /x "{665CC439-C0CF-45ED-97AE-B8D6FA32020E}" /qn /norestart
+	MsiExec /x "{D11FFE30-C7CC-11F0-AD31-000C29910851}" /qn /norestart
+	MsiExec /x "{9F7980D3-0390-4AD6-9E91-92857E1140EA}" /qn /norestart
+	MsiExec /x "{1BC187E8-DD6C-43AC-A979-D0D1E0E13DBA}" /qn /norestart
+	MsiExec /x "{E742027E-BFE1-40E6-9026-199206E3B149}" /qn /norestart
+	
 	Write-Host -Object "Fallback to MSI uninistall for HP Wolf Security Application Support for Chrome"
 }
 Catch {
