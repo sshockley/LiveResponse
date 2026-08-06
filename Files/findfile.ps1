@@ -2,4 +2,4 @@ Param (
 [parameter(Mandatory=$true)][String]$FileName
 )
 
-Get-ChildItem -Include "$($FileName)" -Recurse -ErrorAction SilentlyContinue
+Get-ChildItem -Path / -Include "$($FileName)" -Recurse -ErrorAction SilentlyContinue
