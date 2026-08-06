@@ -45,7 +45,7 @@ try {
     #[string]$LogFilePath = [string]::Format("{0}\{1}_{2}.log", $LogDir, "$(get-date -format `"yyyyMMdd_hhmmsstt`")", $MyInvocation.MyCommand.Name.Replace(".ps1", ""))
     [string]$Url = 'https://go.microsoft.com/fwlink/?LinkID=799445'
     [string]$UpdaterBinary = "$($DownloadDir)\Win10Upgrade.exe"
-    [string]$UpdaterArguments = '/NoReboot /quietinstall /skipeula /auto upgrade /copylogs $LogDir'
+    [string]$UpdaterArguments = "/NoReboot /quietinstall /skipeula /auto upgrade /copylogs $LogDir"
     [System.Net.WebClient]$webClient = New-Object System.Net.WebClient
  
     # Here the music starts playing .. 
