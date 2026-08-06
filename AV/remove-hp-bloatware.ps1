@@ -105,25 +105,29 @@ StopDisableService -name "hptpsmarthealthservice"
 
 # Remove installed programs
 $InstalledPrograms | ForEach-Object {
+  $package     = $_
+  $packageName = $package.Name
 
-  Write-Host -Object "Attempting to uninstall: [$($_.Name)]..."
+  Write-Host -Object "Attempting to uninstall: [$packageName]..."
 
   Try {
-      $Null = $_ | Uninstall-Package -AllVersions -Force -ErrorAction Stop
-      Write-Host -Object "Successfully uninstalled: [$($_.Name)]"
+      $Null = $package | Uninstall-Package -AllVersions -Force -ErrorAction Stop
+      Write-Host -Object "Successfully uninstalled: [$packageName]"
   }
   Catch {
-    Write-Warning -Message "Failed to uninstall: [$($_.Name)]"
-    
-    Write-Host -Object "Attempting to uninstall as MSI package: [$($_.Name)]..."
+    Write-Warning -Message "Failed to uninstall: [$packageName]"
+
+    Write-Host -Object "Attempting to uninstall as MSI package: [$packageName]..."
     Try {
-      $product = Get-WmiObject win32_product | where { $_.name -like "$($_.Name)" }
-      if ($_ -ne $null) {
-        msiexec /x $product.IdentifyingNumber /quiet /noreboot
+      $product = Get-WmiObject Win32_Product | Where-Object { $_.Name -like $packageName }
+      if ($null -ne $product) {
+        $product | ForEach-Object {
+          Start-Process msiexec.exe -ArgumentList "/x", $_.IdentifyingNumber, "/quiet", "/norestart" -Wait
+        }
       }
-      else { Write-Warning -Message "Can't find MSI package: [$($_.Name)]" }
+      else { Write-Warning -Message "Can't find MSI package: [$packageName]" }
     }
-    Catch { Write-Warning -Message "Failed to uninstall MSI package: [$($_.Name)]" }
+    Catch { Write-Warning -Message "Failed to uninstall MSI package: [$packageName]" }
     }
 }
 
