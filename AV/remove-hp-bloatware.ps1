@@ -119,10 +119,15 @@ $InstalledPrograms | ForEach-Object {
 
     Write-Host -Object "Attempting to uninstall as MSI package: [$packageName]..."
     Try {
-      $product = Get-WmiObject Win32_Product | Where-Object { $_.Name -like $packageName }
+      $uninstallKeys = @(
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+        'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+      )
+      $product = Get-ItemProperty $uninstallKeys -ErrorAction SilentlyContinue |
+                 Where-Object { $_.DisplayName -like $packageName -and $_.PSChildName -match '^\{[0-9A-Fa-f-]+\}$' }
       if ($null -ne $product) {
         $product | ForEach-Object {
-          Start-Process msiexec.exe -ArgumentList "/x", $_.IdentifyingNumber, "/quiet", "/norestart" -Wait
+          Start-Process msiexec.exe -ArgumentList "/x", $_.PSChildName, "/quiet", "/norestart" -Wait
         }
       }
       else { Write-Warning -Message "Can't find MSI package: [$packageName]" }
