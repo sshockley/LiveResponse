@@ -41,11 +41,11 @@ function create_zipped_file {
     #Compression process
     Compress-Archive -Path $formatted_input_name -DestinationPath $zipped_file -CompressionLevel Fastest
 
-    # Hash newly created encrypted file
+    # Hash newly created file
     $zipped_file_hash = Get-FileHash $zipped_file | Format-List
 
     # Provide hash information to user
-    Write-Host "Encrypted File Information"
+    Write-Host "File hash"
     Write-Output $zipped_file_hash
     }
 
