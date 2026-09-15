@@ -23,6 +23,88 @@ REPL-style client for Microsoft Defender for Endpoint Live Response
   | `Machine.Read.All` | resolving device names, `actions` |
   | `Library.Manage` | `library` verbs |
 
+## Creating app registration
+
+The WindowsDefenderATP resource app ID is always `fc780465-2017-40d4-a0c5-307022471b92` every tenant.  Running these commands needs a privileged role (Privileged Role Administrator or Global Administrator) for the consent step.
+
+### Azure CLI
+
+```bash
+MDE_API=fc780465-2017-40d4-a0c5-307022471b92
+
+# Uncomment if running in gov clouds
+# az cloud set --name AzureUSGovernment
+
+az login --tenant "$TENANT_ID" --allow-no-subscriptions
+
+# The MDE resource SP must exist before roles can be assigned against it.
+# Missing SP is what produces AADSTS650052 later.
+az ad sp show --id $MDE_API >/dev/null 2>&1 || az ad sp create --id $MDE_API
+
+APP_ID=$(az ad app create \
+  --display-name "MDE Live Response (headless)" \
+  --sign-in-audience AzureADMyOrg \
+  --query appId -o tsv)
+
+az ad sp create --id "$APP_ID"
+
+for ROLE in Machine.LiveResponse Machine.Read.All Library.Manage; do
+  ROLE_ID=$(az ad sp show --id $MDE_API --query "appRoles[?value=='$ROLE'].id | [0]" -o tsv)
+  az ad app permission add --id "$APP_ID" --api $MDE_API --api-permissions "$ROLE_ID=Role"
+done
+
+az ad app permission admin-consent --id "$APP_ID"
+
+echo "ClientId: $APP_ID"
+az ad app permission list-grants --id "$APP_ID" -o table
+```
+
+### Microsoft Graph PowerShell
+
+```powershell
+Install-Module Microsoft.Graph.Applications -Scope CurrentUser
+
+$mdeApiAppId = 'fc780465-2017-40d4-a0c5-307022471b92'
+$roleNames   = 'Machine.LiveResponse','Machine.Read.All','Library.Manage'
+
+Connect-MgGraph -TenantId $tid `
+    -Scopes Application.ReadWrite.All,AppRoleAssignment.ReadWrite.All
+# add -Environment USGov for GCC High, USGovDoD for DoD
+
+$mdeSp = Get-MgServicePrincipal -Filter "appId eq '$mdeApiAppId'"
+if (-not $mdeSp) { $mdeSp = New-MgServicePrincipal -AppId $mdeApiAppId }
+
+$resourceAccess = foreach ($r in $roleNames) {
+    @{ Id = ($mdeSp.AppRoles | Where-Object Value -EQ $r).Id; Type = 'Role' }
+}
+
+$app = New-MgApplication `
+    -DisplayName 'MDE Live Response (headless)' `
+    -SignInAudience AzureADMyOrg `
+    -RequiredResourceAccess @(@{
+        ResourceAppId  = $mdeApiAppId
+        ResourceAccess = @($resourceAccess)
+    })
+
+$sp = New-MgServicePrincipal -AppId $app.AppId
+
+# Admin consent is one app role assignment per permission
+foreach ($ra in $resourceAccess) {
+    New-MgServicePrincipalAppRoleAssignment `
+        -ServicePrincipalId $sp.Id -PrincipalId $sp.Id `
+        -ResourceId $mdeSp.Id -AppRoleId $ra.Id | Out-Null
+}
+
+"ClientId: $($app.AppId)"
+"ObjectId: $($app.Id)"     # keep this, the certificate step needs it
+```
+
+Notes for all methods:
+
+- Remove `Library.Manage` if you are not using the `library` verbs.
+- Role assignments can take a minute to show up in tokens. A 403 on the first run that clears by itself is usually propagation.
+- `New-MgApplication` publishes no credential. The app cannot authenticate until you attach the certificate below.
+
 ## Authentication
 
 ```powershell
@@ -38,12 +120,9 @@ $env:MDE_CLIENT_SECRET = '...'   # or omit and be prompted
 ./Invoke-MdeLiveResponse.ps1 -TenantId $tid -ClientId $cid -UseDeviceCode -DeviceName ws-eng-042
 ```
 
-Clouds: `-Cloud Commercial|UsGovGcc|UsGovGccHigh|UsGovDoD`. Override the host with
-`-ApiBaseUri https://eu.api.security.microsoft.com` for lower latency. Verify gov hostnames
-against current docs. Microsoft has changed them before.
+Clouds: `-Cloud Commercial|UsGovGcc|UsGovGccHigh|UsGovDoD`. Override the host with `-ApiBaseUri https://eu.api.security.microsoft.com` for lower latency. Verify gov hostnames against current docs as they can change.
 
-Other parameters: `-MachineId`, `-DownloadPath`, `-LogPath`, `-PollIntervalSeconds`,
-`-ActionTimeoutMinutes`, `-Comment`, `-CommandWrapperScript`.
+Other parameters: `-MachineId`, `-DownloadPath`, `-LogPath`, `-PollIntervalSeconds`, `-ActionTimeoutMinutes`, `-Comment`, `-CommandWrapperScript`.
 
 ## Certificate setup
 
@@ -70,8 +149,7 @@ chmod 600 lr-app.pfx
 openssl x509 -in lr-app.cer -noout -fingerprint -sha1
 ```
 
-Explicit `-keypbe`/`-certpbe` keeps the bundle readable by .NET. If loading fails on an older
-runtime, re-export with `-legacy`.
+Note: Using `-keypbe`/`-certpbe` keeps the bundle readable by modern .NET. If loading fails on older runtimes, re-export with `-legacy`.
 
 ### Windows (PowerShell)
 
@@ -110,12 +188,58 @@ set since it currently accepts a file path only.
 
 `-CryptoAlgorithmOption AES256_SHA256` avoids the legacy TripleDES default. Remove that parameter if you're running from Windows Server 2012 R2 and earlier.
 
-### Both paths
+## Attaching the certificate
 
-Upload **only** `lr-app.cer`, under App registration > Certificates & secrets > Certificates >
-Upload certificate. The `.pfx` and `.key` stay on your machine.
+Only the public cert gets uploaded to Entra. The `.pfx` and `.key` stay on your machine.  Treat these like passwords.
 
-Then:
+### Entra Portal
+
+App registration > Certificates & secrets > Certificates > Upload certificate, then select
+`lr-app.cer`.
+
+### Azure CLI
+
+```bash
+# --append is load bearing. Without it, every existing credential on the app is removed.
+az ad app credential reset --id "$APP_ID" --cert @lr-app.cer --append
+
+az ad app credential list --id "$APP_ID" --cert -o table
+```
+
+The CLI wants a PEM or base64 `.cer`. `Export-Certificate -Type CERT` on Windows writes DER,
+which it will reject, so convert first:
+
+```powershell
+[Convert]::ToBase64String($cert.RawData) | Set-Content .\lr-app-b64.cer -Encoding ascii
+```
+
+### Microsoft Graph PowerShell
+
+`-KeyCredentials` replaces the whole collection, so read the existing entries and pass them back alongside the new one. Loading through `X509Certificate2` makes this format-agnostic, since
+`RawData` is DER whether the file on disk was PEM or DER.
+
+```powershell
+$appObjectId = '<ObjectId from the app registration step>'
+
+$pub = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
+    (Resolve-Path ./lr-app.cer).Path)
+
+$new = @{
+    Type        = 'AsymmetricX509Cert'
+    Usage       = 'Verify'
+    Key         = $pub.RawData
+    DisplayName = 'CN=mde-live-response'
+}
+
+$existing = (Get-MgApplication -ApplicationId $appObjectId).KeyCredentials
+Update-MgApplication -ApplicationId $appObjectId -KeyCredentials @($existing + $new)
+
+(Get-MgApplication -ApplicationId $appObjectId).KeyCredentials |
+    Select-Object DisplayName, StartDateTime, EndDateTime, @{n='Thumbprint';e={
+        [BitConverter]::ToString($_.CustomKeyIdentifier).Replace('-','') }}
+```
+
+### Then
 
 ```powershell
 $pfxPwd = Read-Host 'PFX password' -AsSecureString
@@ -125,11 +249,9 @@ $pfxPwd = Read-Host 'PFX password' -AsSecureString
 
 Notes:
 
-- Store the `.pfx` in SecretManagement or your KMS rather than next to the script.
-- Rotate before expiry: generate a new pair, upload the new `.cer`, cut over, then delete the
-  old credential in Entra. Two certs can be registered at once, so there is no outage window.
-- The app's `Machine.LiveResponse` grant is tenant-wide. Treat this credential as equivalent to
-  SYSTEM on every onboarded device in scope.
+- Change the script to store the `.pfx` in SecretManagement or a KMS.
+- Rotate before expiry: generate a new pair, attach the new `.cer`, cut over, then delete the old credential in Entra. Two certs can be registered at once, so there is no outage window.
+- The app's `Machine.LiveResponse` grant is tenant-wide. Treat this credential as equivalent to SYSTEM on every onboarded device in scope.
 
 ## First run
 
